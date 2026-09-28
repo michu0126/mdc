@@ -39,6 +39,12 @@ test('configuration, model selection, and Deeplx translation contract', async ()
     const token = fs.readFileSync(path.join(dir, 'mdc-ai-admin-token.txt'), 'utf8').trim();
     const auth = 'Basic ' + Buffer.from('admin:' + token).toString('base64');
     assert.equal((await fetch(base + '/api/config')).status, 401);
+    assert.match(await (await fetch(base + '/')).text(), /MDC AI 设置/);
+    const login = await fetch(base + '/login', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token })
+    });
+    assert.equal(login.status, 204);
+    assert.equal((await fetch(base + '/api/config', { headers: { cookie: login.headers.get('set-cookie') } })).status, 200);
     const saved = await fetch(base + '/api/config', {
       method: 'PUT', headers: { authorization: auth, 'content-type': 'application/json' },
       body: JSON.stringify({ base_url: `http://127.0.0.1:${provider.address().port}/v1`, model: 'model-a', api_key: 'test-key' })
